@@ -1,0 +1,47 @@
+{
+  "name": "updeps",
+  "version": "1.0.0",
+  "description": "CLI to update deps in monorepos",
+  "author": "Zheng Song",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/szhsin/updeps.git"
+  },
+  "homepage": "https://github.com/szhsin/updeps#readme",
+  "type": "module",
+  "main": "./dist/cjs/index.cjs",
+  "module": "./dist/esm/index.mjs",
+  "types": "./types/index.d.ts",
+  "bin": "./dist/cjs/index.cjs",
+  "sideEffects": false,
+  "files": [
+    "dist/",
+    "types/"
+  ],
+  "scripts": {
+    "start": "run-p watch \"types -- --watch\"",
+    "bundle": "rollup -c",
+    "watch": "rollup -c -w",
+    "clean": "rm -Rf dist types",
+    "types": "tsc",
+    "prepare": "rm -Rf types/__tests__",
+    "build": "run-s clean types bundle",
+    "updeps": "node ./dist/cjs/index.cjs",
+    "updeps:dry-run": "node ./dist/cjs/index.cjs --dry-run"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.27.1",
+    "@babel/preset-env": "^7.27.2",
+    "@babel/preset-typescript": "^7.27.1",
+    "@rollup/plugin-babel": "^6.0.4",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@types/node": "^22.15.21",
+    "npm-run-all": "^4.1.5",
+    "rollup": "^4.41.0",
+    "typescript": "^5.8.3"
+  },
+  "dependencies": {
+    "fast-glob": "^3.3.3"
+  }
+}

@@ -1,14 +1,14 @@
 {
-  "name": "updeps",
+  "name": "deplift",
   "version": "1.0.0",
   "description": "CLI to update deps in monorepos",
   "author": "Zheng Song",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/szhsin/updeps.git"
+    "url": "git+https://github.com/szhsin/deplift.git"
   },
-  "homepage": "https://github.com/szhsin/updeps#readme",
+  "homepage": "https://github.com/szhsin/deplift#readme",
   "type": "module",
   "main": "./dist/cjs/index.cjs",
   "module": "./dist/esm/index.mjs",
@@ -27,8 +27,8 @@
     "types": "tsc",
     "prepare": "rm -Rf types/__tests__",
     "build": "run-s clean types bundle",
-    "updeps": "node ./dist/cjs/index.cjs",
-    "updeps:dry-run": "node ./dist/cjs/index.cjs --dry-run"
+    "deplift": "node ./dist/cjs/index.cjs",
+    "deplift:dry-run": "node ./dist/cjs/index.cjs --dry-run"
   },
   "devDependencies": {
     "@babel/core": "^7.27.1",

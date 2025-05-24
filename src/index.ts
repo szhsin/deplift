@@ -39,7 +39,7 @@ if (dryRun)
 const stripPrefix = (version: string) => version.replace(/^[^0-9]*/, "");
 
 const loadConfig = async () => {
-  const configPath = path.resolve("updeps.config.json");
+  const configPath = path.resolve("deplift.config.json");
   try {
     const raw = await readFile(configPath, "utf-8");
     const parsed = JSON.parse(raw);
@@ -155,8 +155,8 @@ async function main() {
 }
 
 main()
-  .then(() => console.log("\n[updeps] ✅ All dependency updates completed!"))
+  .then(() => console.log("\n[deplift] ✅ All dependency updates completed!"))
   .catch((err) => {
-    console.error("\n[updeps] ❌ Unexpected error:", err);
+    console.error("\n[deplift] ❌ Unexpected error:", err);
     process.exit(1);
   });

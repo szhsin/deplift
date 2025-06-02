@@ -9,3 +9,12 @@
 ```bash
 npm install -D deplift
 ```
+
+## Usage
+
+```bash
+npx deplift
+
+# dry run mode
+npx deplift --dry-run
+```

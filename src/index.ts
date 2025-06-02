@@ -38,6 +38,19 @@ if (dryRun)
 
 const stripPrefix = (version: string) => version.replace(/^[^0-9]*/, "");
 
+const isStableRelease = (version: string) => /^\d+\.\d+\.\d+$/.test(version);
+
+const extractSemVerParts = (semver: string) => semver.split(".").map(Number);
+
+function isSemVerGreater(v1: string, v2: string) {
+  const [major1, minor1, patch1] = extractSemVerParts(v1);
+  const [major2, minor2, patch2] = extractSemVerParts(v2);
+
+  if (major1 !== major2) return major1 > major2;
+  if (minor1 !== minor2) return minor1 > minor2;
+  return patch1 > patch2;
+}
+
 const loadConfig = async () => {
   const configPath = path.resolve("deplift.config.json");
   try {
@@ -120,11 +133,33 @@ async function main() {
       // Failed to fetch the pkg
       if (!latest) continue;
 
-      if (stripPrefix(current) === latest) {
-        console.log(`    ${pkg} is already at latest version (${latest})`);
+      if (!isStableRelease(latest)) {
+        console.log(
+          `  ⚠️ [skipped] ${pkg}: latest version is not a stable release (${latest})`
+        );
         continue;
       }
-      console.log(`  ✔ ${section} -> ${pkg}: ${current} → ^${latest}`);
+
+      const currentVersion = stripPrefix(current);
+      if (currentVersion === latest) {
+        console.log(`    ${pkg} is already up to date (${latest})`);
+        continue;
+      }
+
+      if (isSemVerGreater(currentVersion, latest)) {
+        console.log(
+          `  ⚠️ [skipped] ${pkg}: current (${currentVersion}) version is higher than the latest (${latest})`
+        );
+        continue;
+      }
+
+      const [currentMajor] = extractSemVerParts(currentVersion);
+      const [latestMajor] = extractSemVerParts(latest);
+      console.log(
+        `  ${
+          currentMajor === latestMajor ? "✔" : "🚨[major]"
+        } ${pkg}(${section}): ${current} → ^${latest}`
+      );
       updated = true;
       if (!dryRun) {
         pkgData[section][pkg] = `^${latest}`;

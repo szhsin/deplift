@@ -32,6 +32,7 @@ const depSections = ["dependencies", "devDependencies"];
 
 const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
+const noInstall = args.includes("--no-install");
 
 if (dryRun)
   console.log("💡 Dry run enabled — no files will be changed or installed.");
@@ -166,23 +167,25 @@ async function main() {
       }
     }
 
-    if (!updated) {
+    if (updated) {
+      await writeFile(packageJsonPath, JSON.stringify(pkgData, null, 2) + "\n");
+      console.log(`  💾 ${packageJson} updated.`);
+    } else {
       console.log(`  ✅ No changes needed for ${packageJson}.`);
-      continue;
     }
+
+    if (noInstall) continue;
 
     if (dryRun) {
       console.log(`  📥 [Dry run] "npm install" for ${packageJson}.`);
       continue;
     }
 
-    await writeFile(packageJsonPath, JSON.stringify(pkgData, null, 2) + "\n");
-    console.log(`  💾 ${packageJson} updated.`);
-
     try {
       const targetDir = path.dirname(packageJsonPath);
       console.log("  📥 Installing...");
       execSync("npm install", { stdio: "inherit", cwd: targetDir });
+      execSync("npm audit fix", { stdio: "inherit", cwd: targetDir });
     } catch (err: any) {
       console.error(`  ❌ Failed to install in ${packageJson}: ${err.message}`);
     }

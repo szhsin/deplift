@@ -10,6 +10,7 @@ const defaultIgnore = ["**/node_modules/**", "**/dist/**", "**/coverage/**", "**
 const depSections = ["dependencies", "devDependencies"];
 const args = process.argv.slice(2);
 const dryRun = args.includes("--dry-run");
+const noInstall = args.includes("--no-install");
 if (dryRun) console.log("💡 Dry run enabled — no files will be changed or installed.");
 const stripPrefix = version => version.replace(/^[^0-9]*/, "");
 const isStableRelease = version => /^\d+\.\d+\.\d+$/.test(version);
@@ -116,20 +117,25 @@ async function main() {
         pkgData[section][pkg] = `^${latest}`;
       }
     }
-    if (!updated) {
+    if (updated) {
+      await promises.writeFile(packageJsonPath, JSON.stringify(pkgData, null, 2) + "\n");
+      console.log(`  💾 ${packageJson} updated.`);
+    } else {
       console.log(`  ✅ No changes needed for ${packageJson}.`);
-      continue;
     }
+    if (noInstall) continue;
     if (dryRun) {
       console.log(`  📥 [Dry run] "npm install" for ${packageJson}.`);
       continue;
     }
-    await promises.writeFile(packageJsonPath, JSON.stringify(pkgData, null, 2) + "\n");
-    console.log(`  💾 ${packageJson} updated.`);
     try {
       const targetDir = path.dirname(packageJsonPath);
       console.log("  📥 Installing...");
       node_child_process.execSync("npm install", {
+        stdio: "inherit",
+        cwd: targetDir
+      });
+      node_child_process.execSync("npm audit fix", {
         stdio: "inherit",
         cwd: targetDir
       });

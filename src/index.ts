@@ -61,7 +61,7 @@ const loadConfig = async () => {
       return parsed as Config;
     }
     console.warn(
-      `⚠️ Config file exists but is not a valid object: ${configPath}`
+      `⚠️ Config file exists but is not a valid object: ${configPath}`,
     );
   } catch {
     // no config file or cannot read, ignore silently
@@ -136,7 +136,7 @@ async function main() {
 
       if (!isStableRelease(latest)) {
         console.log(
-          `  ⚠️ [skipped] ${pkg}: latest version is not a stable release (${latest})`
+          `  ⚠️ [skipped] ${pkg}: latest version is not a stable release (${latest})`,
         );
         continue;
       }
@@ -149,7 +149,7 @@ async function main() {
 
       if (isSemVerGreater(currentVersion, latest)) {
         console.log(
-          `  ⚠️ [skipped] ${pkg}: current (${currentVersion}) version is higher than the latest (${latest})`
+          `  ⚠️ [skipped] ${pkg}: current (${currentVersion}) version is higher than the latest (${latest})`,
         );
         continue;
       }
@@ -159,7 +159,7 @@ async function main() {
       console.log(
         `  ${
           currentMajor === latestMajor ? "✔" : "🚨[major]"
-        } ${pkg}(${section}): ${current} → ^${latest}`
+        } ${pkg}(${section}): ${current} → ^${latest}`,
       );
       updated = true;
       if (!dryRun) {
@@ -167,7 +167,7 @@ async function main() {
       }
     }
 
-    if (updated) {
+    if (updated && !dryRun) {
       await writeFile(packageJsonPath, JSON.stringify(pkgData, null, 2) + "\n");
       console.log(`  💾 ${packageJson} updated.`);
     } else {
@@ -175,11 +175,6 @@ async function main() {
     }
 
     if (noInstall) continue;
-
-    if (dryRun) {
-      console.log(`  📥 [Dry run] "npm install" for ${packageJson}.`);
-      continue;
-    }
 
     try {
       const targetDir = path.dirname(packageJsonPath);

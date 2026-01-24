@@ -1,5 +1,5 @@
 module.exports = {
-  targets: "defaults",
+  targets: 'defaults',
   assumptions: {
     constantReexports: true,
     ignoreFunctionLength: true,
@@ -16,15 +16,15 @@ module.exports = {
   },
   presets: [
     [
-      "@babel/preset-env",
+      '@babel/preset-env',
       {
         bugfixes: true,
         include: [
-          "@babel/plugin-transform-nullish-coalescing-operator",
-          "@babel/plugin-transform-optional-catch-binding",
+          '@babel/plugin-transform-nullish-coalescing-operator',
+          '@babel/plugin-transform-optional-catch-binding',
         ],
       },
     ],
-    ["@babel/preset-typescript", { allExtensions: true }],
+    ['@babel/preset-typescript', { allExtensions: true }],
   ],
 };

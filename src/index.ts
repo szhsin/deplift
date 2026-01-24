@@ -37,7 +37,7 @@ const noInstall = args.includes('--no-install');
 if (dryRun)
   console.log('💡 Dry run enabled — no files will be changed or installed.');
 
-const stripPrefix = (version: string) => version.replace(/^[^0-9]*/, '');
+const stripPrefix = (version: string) => version.replace(/^\D+/, '');
 
 const isStableRelease = (version: string) => /^\d+\.\d+\.\d+$/.test(version);
 
@@ -130,37 +130,39 @@ async function main() {
     const latestDeps = await Promise.all(dependencies.map(fetchLatestVersion));
 
     let updated = false;
-    for (const { section, pkg, current, latest } of latestDeps) {
+    for (const { section, pkg, current: rawCurrent, latest } of latestDeps) {
       // Failed to fetch the pkg
       if (!latest) continue;
 
-      if (!isStableRelease(latest)) {
+      const current = stripPrefix(rawCurrent);
+
+      if (current === latest) {
+        console.log(`    ${pkg} is already up to date (${latest})`);
+        continue;
+      }
+
+      if (isStableRelease(current) && !isStableRelease(latest)) {
         console.log(
           `  ⚠️ [skipped] ${pkg}: latest version is not a stable release (${latest})`,
         );
         continue;
       }
 
-      const currentVersion = stripPrefix(current);
-      if (currentVersion === latest) {
-        console.log(`    ${pkg} is already up to date (${latest})`);
-        continue;
-      }
-
-      if (isSemVerGreater(currentVersion, latest)) {
+      if (isSemVerGreater(current, latest)) {
         console.log(
-          `  ⚠️ [skipped] ${pkg}: current (${currentVersion}) version is higher than the latest (${latest})`,
+          `  ⚠️ [skipped] ${pkg}: current (${current}) version is higher than the latest (${latest})`,
         );
         continue;
       }
 
-      const [currentMajor] = extractSemVerParts(currentVersion);
+      const [currentMajor] = extractSemVerParts(current);
       const [latestMajor] = extractSemVerParts(latest);
       console.log(
         `  ${
           currentMajor === latestMajor ? '✔' : '🚨[major]'
-        } ${pkg}(${section}): ${current} → ^${latest}`,
+        } ${pkg}(${section}): ${rawCurrent} → ^${latest}`,
       );
+
       updated = true;
       if (!dryRun) {
         pkgData[section][pkg] = `^${latest}`;

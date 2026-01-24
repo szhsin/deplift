@@ -1,32 +1,32 @@
-import { nodeResolve } from "@rollup/plugin-node-resolve";
-import { babel } from "@rollup/plugin-babel";
+import { nodeResolve } from '@rollup/plugin-node-resolve';
+import { babel } from '@rollup/plugin-babel';
 
 const config = {
-  external: ["fast-glob"],
+  external: ['fast-glob'],
   plugins: [
-    nodeResolve({ extensions: [".ts", ".tsx", ".js", ".jsx"] }),
+    nodeResolve({ extensions: ['.ts', '.tsx', '.js', '.jsx'] }),
     babel({
-      babelHelpers: "bundled",
-      extensions: [".ts", ".tsx", ".js", ".jsx"],
+      babelHelpers: 'bundled',
+      extensions: ['.ts', '.tsx', '.js', '.jsx'],
     }),
   ],
   treeshake: {
     moduleSideEffects: false,
     propertyReadSideEffects: false,
   },
-  input: ["src/index.ts"],
+  input: ['src/index.ts'],
   output: [
     {
-      dir: "dist/cjs",
-      format: "cjs",
-      interop: "default",
-      entryFileNames: "[name].cjs",
+      dir: 'dist/cjs',
+      format: 'cjs',
+      interop: 'default',
+      entryFileNames: '[name].cjs',
       preserveModules: true,
     },
     {
-      dir: "dist/esm",
-      format: "es",
-      entryFileNames: "[name].mjs",
+      dir: 'dist/esm',
+      format: 'es',
+      entryFileNames: '[name].mjs',
       preserveModules: true,
     },
   ],

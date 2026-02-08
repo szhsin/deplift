@@ -2,7 +2,7 @@ import { nodeResolve } from '@rollup/plugin-node-resolve';
 import { babel } from '@rollup/plugin-babel';
 
 const config = {
-  external: ['fast-glob'],
+  external: ['fast-glob', 'yargs', 'yargs/helpers'],
   plugins: [
     nodeResolve({ extensions: ['.ts', '.tsx', '.js', '.jsx'] }),
     babel({

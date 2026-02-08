@@ -15,6 +15,10 @@ npm install -D deplift
 ```bash
 npx deplift
 
-# dry run mode
-npx deplift --dry-run
+Options:
+  --major    set major version caps: dep=version pairs [array] [default: []]
+  -d, --dry-run  Run without making changes           [boolean] [default: false]
+      --install  Run npm install                       [boolean] [default: true]
+  -v, --version  Show version number                                   [boolean]
+  -h, --help     Show help                                             [boolean]
 ```

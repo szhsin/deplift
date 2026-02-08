@@ -1,15 +1,13 @@
 #!/usr/bin/env node
-import path from 'node:path';
+import path, { resolve } from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import fg from 'fast-glob';
+import yargs from 'yargs';
+import { hideBin } from 'yargs/helpers';
 
 const defaultIgnore = ['**/node_modules/**', '**/dist/**', '**/coverage/**', '**/build/**', '**/.next/**', '**/.docusaurus/**'];
 const depSections = ['dependencies', 'devDependencies'];
-const args = process.argv.slice(2);
-const dryRun = args.includes('--dry-run');
-const noInstall = args.includes('--no-install');
-if (dryRun) console.log('💡 Dry run enabled — no files will be changed or installed.');
 const stripPrefix = version => version.replace(/^\D+/, '');
 const isStableRelease = version => /^\d+\.\d+\.\d+$/.test(version);
 const extractSemVerParts = semver => semver.split('.').map(Number);
@@ -53,7 +51,48 @@ const fetchLatestVersion = async dep => {
   }
   return dep;
 };
+const parseArgs = async () => {
+  let pkg = {
+    version: 'unknown'
+  };
+  try {
+    pkg = JSON.parse(await readFile(resolve(process.cwd(), 'package.json'), 'utf8'));
+  } catch (_unused2) {}
+  const argv = await yargs(hideBin(process.argv)).option('major', {
+    type: 'array',
+    describe: 'set major version caps: dep=version pairs',
+    default: [],
+    coerce: pairs => {
+      const result = {};
+      for (const pair of pairs) {
+        const idx = pair.indexOf('=');
+        if (idx === -1) {
+          throw new Error(`Invalid --major value "${pair}", expected dep=version`);
+        }
+        const key = pair.slice(0, idx);
+        const value = pair.slice(idx + 1);
+        result[key] = Number(value);
+      }
+      return result;
+    }
+  }).option('dry-run', {
+    type: 'boolean',
+    describe: 'Run without making changes',
+    default: false
+  }).option('install', {
+    type: 'boolean',
+    describe: 'Run npm install',
+    default: true
+  }).version(pkg.version).strict().help().alias('dry-run', 'd').alias('version', 'v').alias('help', 'h').parse();
+  return argv;
+};
 async function main() {
+  const {
+    dryRun,
+    install: runInstall,
+    major: majorCaps
+  } = await parseArgs();
+  if (dryRun) console.log('💡 Dry run enabled — no files will be changed or installed.');
   const config = await loadConfig();
   const ignorePatterns = Array.isArray(config.ignore) ? Array.from(new Set([...defaultIgnore, ...config.ignore])) : defaultIgnore;
   const packageFiles = await fg.glob('**/package.json', {
@@ -69,7 +108,7 @@ async function main() {
     let pkgData;
     try {
       pkgData = JSON.parse(pkgRaw);
-    } catch (_unused2) {
+    } catch (_unused3) {
       console.warn(`⚠️ Failed to parse JSON in ${packageJson}, skipping.`);
       continue;
     }
@@ -107,21 +146,27 @@ async function main() {
         console.log(`  ⚠️ [skipped] ${pkg}: current (${current}) version is higher than the latest (${latest})`);
         continue;
       }
-      const [currentMajor] = extractSemVerParts(current);
       const [latestMajor] = extractSemVerParts(latest);
+      if (latestMajor > majorCaps[pkg]) {
+        console.log(`  ⚠️ [skipped] ${pkg}: ${latest} is available, but the major version is capped at v${majorCaps[pkg]}`);
+        continue;
+      }
+      const [currentMajor] = extractSemVerParts(current);
       console.log(`  ${currentMajor === latestMajor ? '✔' : '🚨[major]'} ${pkg}(${section}): ${rawCurrent} → ^${latest}`);
       updated = true;
       if (!dryRun) {
         pkgData[section][pkg] = `^${latest}`;
       }
     }
-    if (updated && !dryRun) {
-      await writeFile(packageJsonPath, JSON.stringify(pkgData, null, 2) + '\n');
-      console.log(`  💾 ${packageJson} updated.`);
+    if (updated) {
+      if (!dryRun) {
+        await writeFile(packageJsonPath, JSON.stringify(pkgData, null, 2) + '\n');
+        console.log(`  💾 ${packageJson} updated.`);
+      }
     } else {
       console.log(`  ✅ No changes needed for ${packageJson}.`);
     }
-    if (noInstall) continue;
+    if (!runInstall || dryRun || !updated) continue;
     try {
       const targetDir = path.dirname(packageJsonPath);
       console.log('  📥 Installing...');

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import path from 'node:path';
+import path, { resolve } from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import fg from 'fast-glob';
@@ -81,10 +81,17 @@ const fetchLatestVersion = async (dep: dependency): Promise<dependency> => {
 };
 
 const parseArgs = async () => {
+  let pkg = { version: 'unknown' };
+  try {
+    pkg = JSON.parse(
+      await readFile(resolve(process.cwd(), 'package.json'), 'utf8'),
+    );
+  } catch {}
+
   const argv = await yargs(hideBin(process.argv))
     .option('major', {
       type: 'array',
-      describe: 'major dep=version pairs',
+      describe: 'set major version caps: dep=version pairs',
       default: [],
       coerce: (pairs: string[]) => {
         const result: Record<string, number> = {};
@@ -116,8 +123,12 @@ const parseArgs = async () => {
       describe: 'Run npm install',
       default: true,
     })
+    .version(pkg.version)
     .strict()
     .help()
+    .alias('dry-run', 'd')
+    .alias('version', 'v')
+    .alias('help', 'h')
     .parse();
 
   return argv;

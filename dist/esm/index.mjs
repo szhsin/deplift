@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import path from 'node:path';
+import path, { resolve } from 'node:path';
 import { readFile, writeFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import fg from 'fast-glob';
@@ -52,9 +52,15 @@ const fetchLatestVersion = async dep => {
   return dep;
 };
 const parseArgs = async () => {
+  let pkg = {
+    version: 'unknown'
+  };
+  try {
+    pkg = JSON.parse(await readFile(resolve(process.cwd(), 'package.json'), 'utf8'));
+  } catch (_unused2) {}
   const argv = await yargs(hideBin(process.argv)).option('major', {
     type: 'array',
-    describe: 'major dep=version pairs',
+    describe: 'set major version caps: dep=version pairs',
     default: [],
     coerce: pairs => {
       const result = {};
@@ -77,7 +83,7 @@ const parseArgs = async () => {
     type: 'boolean',
     describe: 'Run npm install',
     default: true
-  }).strict().help().parse();
+  }).version(pkg.version).strict().help().alias('dry-run', 'd').alias('version', 'v').alias('help', 'h').parse();
   return argv;
 };
 async function main() {
@@ -102,7 +108,7 @@ async function main() {
     let pkgData;
     try {
       pkgData = JSON.parse(pkgRaw);
-    } catch (_unused2) {
+    } catch (_unused3) {
       console.warn(`⚠️ Failed to parse JSON in ${packageJson}, skipping.`);
       continue;
     }

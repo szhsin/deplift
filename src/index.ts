@@ -242,7 +242,7 @@ async function main() {
       console.log(`  ✅ No changes needed for ${packageJson}.`);
     }
 
-    if (!runInstall || dryRun || !updated) continue;
+    if (!runInstall || dryRun) continue;
 
     try {
       const targetDir = path.dirname(packageJsonPath);

@@ -1,11 +1,13 @@
 #!/usr/bin/env node
-import path, { resolve } from 'node:path';
+import path, { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { readFile, writeFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import fg from 'fast-glob';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
 
+const __dirname$1 = dirname(fileURLToPath(import.meta.url));
 const defaultIgnore = ['**/node_modules/**', '**/dist/**', '**/coverage/**', '**/build/**', '**/.next/**', '**/.docusaurus/**'];
 const depSections = ['dependencies', 'devDependencies'];
 const stripPrefix = version => version.replace(/^\D+/, '');
@@ -56,7 +58,8 @@ const parseArgs = async () => {
     version: 'unknown'
   };
   try {
-    pkg = JSON.parse(await readFile(resolve(process.cwd(), 'package.json'), 'utf8'));
+    pkg = JSON.parse(await readFile(resolve(__dirname$1, '../../package.json'), 'utf8'));
+    console.log(`[deplift] v${pkg.version}\n`);
   } catch (_unused2) {}
   const argv = await yargs(hideBin(process.argv)).option('major', {
     type: 'array',

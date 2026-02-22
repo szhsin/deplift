@@ -1,11 +1,14 @@
 #!/usr/bin/env node
 
-import path, { resolve } from 'node:path';
+import path, { resolve, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { readFile, writeFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
 import fg from 'fast-glob';
 import yargs from 'yargs';
 import { hideBin } from 'yargs/helpers';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 interface Config {
   ignore?: string[];
@@ -84,8 +87,9 @@ const parseArgs = async () => {
   let pkg = { version: 'unknown' };
   try {
     pkg = JSON.parse(
-      await readFile(resolve(process.cwd(), 'package.json'), 'utf8'),
+      await readFile(resolve(__dirname, '../../package.json'), 'utf8'),
     );
+    console.log(`[deplift] v${pkg.version}\n`);
   } catch {}
 
   const argv = await yargs(hideBin(process.argv))

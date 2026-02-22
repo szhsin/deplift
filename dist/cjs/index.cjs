@@ -2,12 +2,15 @@
 'use strict';
 
 var path = require('node:path');
+var node_url = require('node:url');
 var promises = require('node:fs/promises');
 var node_child_process = require('node:child_process');
 var fg = require('fast-glob');
 var yargs = require('yargs');
 var helpers = require('yargs/helpers');
 
+var _documentCurrentScript = typeof document !== 'undefined' ? document.currentScript : null;
+const __dirname$1 = path.dirname(node_url.fileURLToPath((typeof document === 'undefined' ? require('u' + 'rl').pathToFileURL(__filename).href : (_documentCurrentScript && _documentCurrentScript.tagName.toUpperCase() === 'SCRIPT' && _documentCurrentScript.src || new URL('index.cjs', document.baseURI).href))));
 const defaultIgnore = ['**/node_modules/**', '**/dist/**', '**/coverage/**', '**/build/**', '**/.next/**', '**/.docusaurus/**'];
 const depSections = ['dependencies', 'devDependencies'];
 const stripPrefix = version => version.replace(/^\D+/, '');
@@ -58,7 +61,8 @@ const parseArgs = async () => {
     version: 'unknown'
   };
   try {
-    pkg = JSON.parse(await promises.readFile(path.resolve(process.cwd(), 'package.json'), 'utf8'));
+    pkg = JSON.parse(await promises.readFile(path.resolve(__dirname$1, '../../package.json'), 'utf8'));
+    console.log(`[deplift] v${pkg.version}\n`);
   } catch (_unused2) {}
   const argv = await yargs(helpers.hideBin(process.argv)).option('major', {
     type: 'array',

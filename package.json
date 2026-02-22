@@ -1,6 +1,6 @@
 {
   "name": "deplift",
-  "version": "1.2.3",
+  "version": "1.2.4",
   "description": "CLI to update deps in monorepos",
   "author": "Zheng Song",
   "license": "MIT",

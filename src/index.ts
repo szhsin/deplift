@@ -209,15 +209,15 @@ async function main() {
         continue;
       }
 
+      const [currentMajor] = extractSemVerParts(current);
       const [latestMajor] = extractSemVerParts(latest);
-      if (latestMajor > majorCaps[pkg]) {
+      if (currentMajor <= majorCaps[pkg] && latestMajor > majorCaps[pkg]) {
         console.log(
           `  ⚠️ [skipped] ${pkg}: ${latest} is available, but the major version is capped at v${majorCaps[pkg]}`,
         );
         continue;
       }
 
-      const [currentMajor] = extractSemVerParts(current);
       console.log(
         `  ${
           currentMajor === latestMajor ? '✔' : '🚨[major]'

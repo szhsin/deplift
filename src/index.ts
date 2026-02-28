@@ -89,17 +89,25 @@ const parseArgs = async () => {
     pkg = JSON.parse(
       await readFile(resolve(__dirname, '../../package.json'), 'utf8'),
     );
-    console.log(`[deplift] v${pkg.version}\n`);
   } catch {}
 
   const argv = await yargs(hideBin(process.argv))
+    .command<{ path?: string }>(
+      '$0 [pkgPath]',
+      'CLI to update deps in monorepos',
+      (yargs) => {
+        yargs.positional('pkgPath', {
+          type: 'string',
+          describe: 'Path to package.json',
+        });
+      },
+    )
     .option('major', {
       type: 'array',
-      describe: 'set major version caps: dep=version pairs',
-      default: [],
+      describe: 'Set major version caps: dep=version pairs',
+      default: [] as string[],
       coerce: (pairs: string[]) => {
         const result: Record<string, number> = {};
-
         for (const pair of pairs) {
           const idx = pair.indexOf('=');
           if (idx === -1) {
@@ -107,18 +115,21 @@ const parseArgs = async () => {
               `Invalid --major value "${pair}", expected dep=version`,
             );
           }
-
           const key = pair.slice(0, idx);
           const value = pair.slice(idx + 1);
-
-          result[key] = Number(value);
+          const num = Number(value);
+          if (isNaN(num))
+            throw new Error(
+              `Invalid --major version "${value}" for "${key}", expected a number`,
+            );
+          result[key] = num;
         }
-
         return result;
       },
     })
     .option('dry-run', {
       type: 'boolean',
+      alias: 'd',
       describe: 'Run without making changes',
       default: false,
     })
@@ -128,18 +139,24 @@ const parseArgs = async () => {
       default: true,
     })
     .version(pkg.version)
-    .strict()
     .help()
-    .alias('dry-run', 'd')
-    .alias('version', 'v')
-    .alias('help', 'h')
+    .alias('v', 'version')
+    .alias('h', 'help')
+    .strict()
     .parse();
 
-  return argv;
+  console.log(`[deplift] v${pkg.version}\n`);
+
+  return argv as typeof argv & { pkgPath?: string };
 };
 
 async function main() {
-  const { dryRun, install: runInstall, major: majorCaps } = await parseArgs();
+  const {
+    dryRun,
+    install: runInstall,
+    major: majorCaps,
+    pkgPath,
+  } = await parseArgs();
 
   if (dryRun)
     console.log('💡 Dry run enabled — no files will be changed or installed.');
@@ -150,7 +167,10 @@ async function main() {
     ? Array.from(new Set([...defaultIgnore, ...config.ignore]))
     : defaultIgnore;
 
-  const packageFiles = await fg.glob('**/package.json', {
+  const searchPath =
+    pkgPath && (pkgPath.endsWith('/') ? pkgPath : `${pkgPath}/`);
+
+  const packageFiles = await fg.glob(`${searchPath ?? '**/'}package.json`, {
     ignore: ignorePatterns,
   });
 

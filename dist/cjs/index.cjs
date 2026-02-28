@@ -62,11 +62,15 @@ const parseArgs = async () => {
   };
   try {
     pkg = JSON.parse(await promises.readFile(path.resolve(__dirname$1, '../../package.json'), 'utf8'));
-    console.log(`[deplift] v${pkg.version}\n`);
   } catch (_unused2) {}
-  const argv = await yargs(helpers.hideBin(process.argv)).option('major', {
+  const argv = await yargs(helpers.hideBin(process.argv)).command('$0 [pkgPath]', 'CLI to update deps in monorepos', yargs => {
+    yargs.positional('pkgPath', {
+      type: 'string',
+      describe: 'Path to package.json'
+    });
+  }).option('major', {
     type: 'array',
-    describe: 'set major version caps: dep=version pairs',
+    describe: 'Set major version caps: dep=version pairs',
     default: [],
     coerce: pairs => {
       const result = {};
@@ -77,31 +81,37 @@ const parseArgs = async () => {
         }
         const key = pair.slice(0, idx);
         const value = pair.slice(idx + 1);
-        result[key] = Number(value);
+        const num = Number(value);
+        if (isNaN(num)) throw new Error(`Invalid --major version "${value}" for "${key}", expected a number`);
+        result[key] = num;
       }
       return result;
     }
   }).option('dry-run', {
     type: 'boolean',
+    alias: 'd',
     describe: 'Run without making changes',
     default: false
   }).option('install', {
     type: 'boolean',
     describe: 'Run npm install',
     default: true
-  }).version(pkg.version).strict().help().alias('dry-run', 'd').alias('version', 'v').alias('help', 'h').parse();
+  }).version(pkg.version).help().alias('v', 'version').alias('h', 'help').strict().parse();
+  console.log(`[deplift] v${pkg.version}\n`);
   return argv;
 };
 async function main() {
   const {
     dryRun,
     install: runInstall,
-    major: majorCaps
+    major: majorCaps,
+    pkgPath
   } = await parseArgs();
   if (dryRun) console.log('💡 Dry run enabled — no files will be changed or installed.');
   const config = await loadConfig();
   const ignorePatterns = Array.isArray(config.ignore) ? Array.from(new Set([...defaultIgnore, ...config.ignore])) : defaultIgnore;
-  const packageFiles = await fg.glob('**/package.json', {
+  const searchPath = pkgPath && (pkgPath.endsWith('/') ? pkgPath : `${pkgPath}/`);
+  const packageFiles = await fg.glob(`${searchPath != null ? searchPath : '**/'}package.json`, {
     ignore: ignorePatterns
   });
   if (packageFiles.length === 0) {

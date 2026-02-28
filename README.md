@@ -15,10 +15,14 @@ npm install -D deplift
 ```bash
 npx deplift
 
+Positionals:
+  pkgPath  Path to package.json                                   [string]
+
 Options:
-  --major    set major version caps: dep=version pairs [array] [default: []]
-  -d, --dry-run  Run without making changes           [boolean] [default: false]
-      --install  Run npm install                       [boolean] [default: true]
-  -v, --version  Show version number                                   [boolean]
-  -h, --help     Show help                                             [boolean]
+      --major    Set major version caps: dep=version pairs
+                                                     [array] [default: []]
+  -d, --dry-run  Run without making changes     [boolean] [default: false]
+      --install  Run npm install                 [boolean] [default: true]
+  -v, --version  Show version number                             [boolean]
+  -h, --help     Show help
 ```
